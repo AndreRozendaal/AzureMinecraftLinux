@@ -1,0 +1,41 @@
+---
+
+- name: Backup minecraft
+  gather_facts: true
+  hosts: minecraft
+  user: cccadmin
+  become: true
+  tasks:
+  
+    - name: Make sure a services are stopped
+      systemd:
+        state: stopped
+        name: '{{ item }}'
+      loop: 
+        - minecraft-server.service
+        - minecraft-server3.service
+      
+    - name: Archive minecraft
+      archive:
+        path: /srv/{{ item }}
+        dest: /srv/minecraft/{{ item }}.tgz
+      loop: 
+        - minecraft_server
+        - minecraft_server2
+        - minecraft_server3
+
+    - name: Make sure a service is running
+      systemd:
+         state: started
+         name: '{{ item }}'
+      loop: 
+         - minecraft-server.service
+         - minecraft-server3.service
+    - name: Copy file to localhost
+      fetch:
+         src: /srv/minecraft/{{ item }}.tgz
+         dest: . 
+      loop: 
+          - minecraft_server
+          - minecraft_server2
+          - minecraft_server3 

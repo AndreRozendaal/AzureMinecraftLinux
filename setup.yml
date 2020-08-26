@@ -1,6 +1,6 @@
 ---
 
-- name: Setup mincraft
+- name: Setup minecraft
   gather_facts: true
   hosts: minecraft
   user: cccadmin
@@ -46,7 +46,7 @@
           - /srv/minecraft_server2
           - /srv/minecraft_server3
 
-    - name: Extract mincraft backup to original path
+    - name: Extract minecraft backup to original path
       unarchive:
         src: '{{ item }}'
         dest: /
