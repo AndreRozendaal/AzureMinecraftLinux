@@ -1,0 +1,98 @@
+---
+
+- name: Setup mincraft
+  gather_facts: true
+  hosts: minecraft
+  user: cccadmin
+  become: true
+  tasks:
+  
+    - name: Display the config
+      debug:
+        msg: "The hostname is {{ inventory_hostname }} and using distribution {{ ansible_distribution }}."
+
+    - name: Upgrade all packages to the latest version
+      apt:
+        force_apt_get: yes
+        name: "*"
+        state: latest
+
+    - name: Install software
+      apt:
+        force_apt_get: yes
+        name: '{{ item }}'
+        state: present
+      loop:
+         - wget 
+         - screen 
+         - default-jdk 
+         - nmap 
+         
+    - name: Create user
+      user:
+        name: minecraft
+        home: /srv/minecraft
+
+    - name: Make dir server 
+      file:
+        path: '{{ item }}'
+        state: directory
+        owner: minecraft
+        group: minecraft
+        mode: '0770'
+      loop: 
+          - /srv/minecraft
+          - /srv/minecraft_server
+          - /srv/minecraft_server2
+          - /srv/minecraft_server3
+
+    - name: Extract mincraft backup to original path
+      unarchive:
+        src: '{{ item }}'
+        dest: /
+      loop: 
+        - minecraft-latest.tgz
+        - minecraft2-latest.tgz
+        - minecraft3-latest.tgz
+
+    - name: Download server.jar 1.16.2 from mojang
+      get_url:
+        url:  https://launcher.mojang.com/v1/objects/c5f6fb23c3876461d46ec380421e42b289789530/server.jar
+        dest: '{{ item }}'
+        owner: minecraft
+        group: minecraft
+      loop: 
+          - /srv/minecraft
+          - /srv/minecraft_server
+          - /srv/minecraft_server3
+
+    - name: set all permissions 
+      file: 
+        dest: '{{ item }}' 
+        owner: minecraft
+        group: minecraft
+        recurse: yes
+      loop: 
+          - /srv/minecraft_server
+          - /srv/minecraft_server2
+          - /srv/minecraft_server3
+
+    - name: Copy file with owner and permissions
+      copy:
+        src: '{{ item }}'
+        dest: /etc/systemd/system/{{ item }}
+        owner: root
+        group: root
+        mode: '0644'
+      loop: 
+         - minecraft-server.service
+         - minecraft-server3.service
+    
+    - name: Make sure a service is running
+      systemd:
+         state: started
+         name: '{{ item }}'
+      loop: 
+         - minecraft-server.service
+         - minecraft-server3.service
+        

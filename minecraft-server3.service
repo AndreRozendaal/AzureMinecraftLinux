@@ -1,0 +1,12 @@
+[Unit]
+Description=Minecraft Service3
+After=rc-local.service
+[Service]
+WorkingDirectory=/srv/minecraft_server3
+ExecStart=/usr/bin/java -Xms1g -Xmx2g -jar /srv/minecraft_server3/server.jar nogui
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+Alias=minecraft-server3.service
